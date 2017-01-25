@@ -35,14 +35,23 @@ module Hashid
 
     module ClassMethods
       def hashids
-        secret = Hashid::Rails.configuration.secret
-        length = Hashid::Rails.configuration.length
-        alphabet = Hashid::Rails.configuration.alphabet
+        connection_type = Hashid::Rails.configuration.connection_type
+        connection = Hashid::Rails.configuration.connections[connection_type]
+        secret = connection[:secret]
+        length = connection[:length]
+        alphabet = connection[:alphabet]
 
-        arguments = ["#{table_name}#{secret}", length]
+        arguments = ["#{secret}", length]
         arguments << alphabet if alphabet.present?
 
+        Hashid::Rails.configuration.connection_type = 'main'
+
         Hashids.new(*arguments)
+      end
+
+      def connect_with(connection_type)
+        Hashid::Rails.configuration.connection_type = connection_type
+        self
       end
 
       def encode_id(ids)
